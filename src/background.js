@@ -23,6 +23,7 @@ ipcMain.on('connect', (event, arg) => {
   // const str = app.getAppPath()
   // const filePath = path.join('build', 'frp', 'frpc.ini')
   // 开发路径与打包路径不一致
+  // const filePath = path.join(__static, 'frp')
   const appPath = path.resolve(__dirname, '..')
   const filePath = path.join(appPath, 'frp', 'frpc.ini')
   const writeString = `
@@ -84,6 +85,7 @@ function runExec (event) {
   // const str = app.getAppPath()
   // const filePath = path.join('build', 'frp')
   // const filePath = path.join(__static, 'frp')
+  // 开发路径与打包路径不一致
   const appPath = path.resolve(__dirname, '..')
   const filePath = path.join(appPath, 'frp')
   // event.sender.send('mes', filePath)
