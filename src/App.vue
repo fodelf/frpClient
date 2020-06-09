@@ -71,14 +71,21 @@
         @click="connect('ruleForm')"
         >连接</el-button
       >
-      <el-button size="mini" v-show="!ishow" type="danger" @click="breack()"
+      <el-button size="mini" v-show="!ishow" type="danger" @click="back()"
+        >修改配置</el-button
+      >
+      <!-- <el-button size="mini" type="danger" @click="breack()"
+        >强制断开</el-button
+      > -->
+      <!-- <el-button size="mini" v-show="!ishow" type="danger" @click="breack()"
         >断开</el-button
       >
       <el-button size="mini" type="danger" @click="breack()"
         >强制断开</el-button
-      >
+      > -->
     </div>
-    <div class="footer">请勿触犯国家法律与社会道德</div>
+    <div class="footer">程序退出后超时会自动断开连接</div>
+     <!-- <div class="footer">请勿触犯国家法律与社会道德</div> -->
   </div>
 </template>
 <script>
@@ -123,6 +130,9 @@ export default {
     }
   },
   methods: {
+    back () {
+      this.ishow = true
+    },
     connect () {
       this.$refs.form.validate(valid => {
         if (valid) {
@@ -220,8 +230,8 @@ export default {
     }
   }
   .footer {
-    // margin-top: 10px;
-    position: fixed;
+    margin-top: 10px;
+    // position: fixed;
     bottom: 10px;
     width: 100%;
     font-size: 14px;

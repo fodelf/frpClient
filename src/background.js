@@ -5,7 +5,7 @@ import {
   createProtocol
   /* installVueDevtools */
 } from 'vue-cli-plugin-electron-builder/lib'
-
+const os = require('os')
 const fs = require('fs')
 const path = require('path')
 const exec = require('child_process').exec
@@ -18,18 +18,32 @@ let win
 var count = 0
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: true, standard: true } }])
+const appPath = path.resolve(__dirname, '..')
+// const appPath = process.cwd()
+var flag = false
 ipcMain.on('connect', (event, arg) => {
   console.log(arg)
   // const str = app.getAppPath()
   // const filePath = path.join('build', 'frp', 'frpc.ini')
   // 开发路径与打包路径不一致
   // const filePath = path.join(__static, 'frp')
-  const appPath = path.resolve(__dirname, '..')
-  const filePath = path.join(appPath, 'frp', 'frpc.ini')
+  var filePath = ''
+  const type = os.type()
+  switch (type) {
+    case 'Darwin':
+    case 'Linux':
+      filePath = path.join(appPath, 'frp', 'frp_mac', 'frpc.ini')
+      break
+    case 'Windows_NT':
+      filePath = path.join(appPath, 'frp', 'frp_win', 'frpc.ini')
+      break
+  }
   const writeString = `
     [common]
     server_addr = 111.229.133.9
-    server_port = 7000 
+    server_port = 7000
+    admin_addr = 127.0.0.1
+    admin_port = 7400
     [${Math.floor(Math.random() * 100000)}]
     type = tcp
     local_ip = ${arg.ip}
@@ -58,54 +72,138 @@ function close () {
   if (workerProcess) {
     // exec(str, {})
     // workerProcess.kill()
-    exec('ps -ef|grep frp', function (err, stdout, stderr) {
-      if (err) { return console.log(err) }
-      stdout.split('\n').filter(function (line) {
-        var p = line.trim().split(/\s+/)
-        console.log(p)
-        var address = p[1]
-        console.log(address)
-        if (address !== undefined && address !== 'PID' && p.some((item) => {
-          return item === './frpc.ini'
-        })) {
-          exec('kill ' + address, function (err, stdout, stderr) {
-            if (err) {
-              return console.log('杀死进程失败！！')
-            }
-            console.log('杀死进程')
-          })
-        }
-      })
-    })
+    const type = os.type()
+    const appPath = path.resolve(__dirname, '..')
+    var filePath = ''
+    switch (type) {
+      case 'Darwin':
+      case 'Linux':
+        filePath = path.join(appPath, 'frp', 'frp_mac')
+        workerProcess = exec('frpc --reload', {
+          cwd: filePath
+        })
+        break
+      case 'Windows_NT':
+        // shellAction(`cd  ${filePath}`)
+        filePath = path.join(appPath, 'frp', 'frp_win')
+        workerProcess = exec('frps.exe --reload', {
+          cwd: filePath
+        })
+        break
+    }
+    // switch (type) {
+    //   case 'Darwin':
+    //   case 'Linux':
+    //     exec('ps -ef|grep frp', function (err, stdout, stderr) {
+    //       if (err) { return console.log(err) }
+    //       stdout.split('\n').filter(function (line) {
+    //         var p = line.trim().split(/\s+/)
+    //         console.log(p)
+    //         var address = p[1]
+    //         console.log(address)
+    //         if (address !== undefined && address !== 'PID' && p.some((item) => {
+    //           return item === './frpc.ini'
+    //         })) {
+    //           exec('kill ' + address, function (err, stdout, stderr) {
+    //             if (err) {
+    //               return console.log('杀死进程失败！！')
+    //             }
+    //             console.log('杀死进程')
+    //           })
+    //         }
+    //       })
+    //     })
+    //     break
+    //   case 'Windows_NT':
+    //     // exec('taskkill /f /im frpc.exe')
+    //     // exec('taskkill /f /im frpc.exe')
+    //     // filePath = path.join(appPath, 'frp', 'frp_win')
+    //     // console.log(filePath)
+    //     workerProcess = exec('frpc.exe reload', {
+    //       cwd: filePath
+    //     })
+    //     // 打印正常的后台可执行程序输出
+    //     workerProcess.stdout.on('data', function (data) {
+    //       console.log('stdout: ' + data)
+    //     })
+
+    //     // 打印错误的后台可执行程序输出
+    //     workerProcess.stderr.on('data', function (data) {
+    //       console.log('stderr: ' + data)
+    //     })
+
+    //     // 退出之后的输出
+    //     workerProcess.on('close', function (code) {
+    //       console.log('out code：' + code)
+    //     })
+    //     break
+    // }
   }
 }
-function runExec (event) {
+async function runExec (event) {
   close()
   count = 0
   // const str = app.getAppPath()
   // const filePath = path.join('build', 'frp')
   // const filePath = path.join(__static, 'frp')
   // 开发路径与打包路径不一致
-  const appPath = path.resolve(__dirname, '..')
-  const filePath = path.join(appPath, 'frp')
+  // const appPath = path.resolve(__dirname, '..')
+  // const filePath = path.join(appPath, 'frp')
+  // const appPath = path.resolve(__dirname, '..')
+  // const appPath = process.cwd()
+  // var filePath = ''
+  // const type = os.type()
+  // switch (type) {
+  //   case 'Darwin':
+  //   case 'Linux':
+  //     filePath = path.join(appPath, 'frp', 'frp_mac', 'frpc.ini')
+  //     break
+  //   case 'Windows_NT':
+  //     filePath = path.join(appPath, 'frp', 'frp_win', 'frpc.ini')
+  //     break
+  // }
   // event.sender.send('mes', filePath)
   // 执行命令行，如果命令不需要路径，或就是项目根目录，则不需要cwd参数：
-  workerProcess = exec(`cd  ${filePath}
-                        ./frpc -c  ./frpc.ini
-                        `, {})
+  const type = os.type()
+  const appPath = path.resolve(__dirname, '..')
+  var filePath = ''
+  switch (type) {
+    case 'Darwin':
+    case 'Linux':
+      filePath = path.join(appPath, 'frp', 'frp_mac')
+      workerProcess = exec(`cd  ${filePath}
+    ./frpc -c reload  ./frpc.ini
+    `, {})
+      break
+    case 'Windows_NT':
+      // shellAction(`cd  ${filePath}`)
+      filePath = path.join(appPath, 'frp', 'frp_win')
+      console.log(filePath)
+      if (flag) {
+        workerProcess = exec('frpc.exe reload', {
+          cwd: filePath
+        })
+      } else {
+        workerProcess = exec('frpc.exe', {
+          cwd: filePath
+        })
+      }
+      break
+  }
+  flag = true
   // 不受child_process默认的缓冲区大小的使用方法，没参数也要写上{}：workerProcess = exec(cmdStr, {})
 
   // 打印正常的后台可执行程序输出
   workerProcess.stdout.on('data', function (data) {
     console.log('stdout: ' + data)
     event.sender.send('mes', data)
-    if (data.includes('proxy success')) {
+    if (data.includes('proxy success') || data.includes('reload success')) {
       event.sender.send('ok', count)
       count = count++
     } else if (data.includes('already used')) {
       event.sender.send('used')
     } else if (data.includes('W')) {
-      event.sender.send('warning')
+      // event.sender.send('warning')
     }
   })
 
@@ -125,8 +223,8 @@ function runExec (event) {
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 400,
-    height: 280,
+    width: 420,
+    height: 320,
     webPreferences: {
       nodeIntegration: true
     }
