@@ -116,11 +116,13 @@ export default {
     }
     return {
       ishow: true,
+      isChange: false,
       form: {
         ip: '',
         port: '',
         remotePort: '',
-        type: 'tcp'
+        type: 'tcp',
+        isChange: false
       },
       rules: {
         ip: [{ validator: validip, trigger: 'blur' }],
@@ -172,6 +174,7 @@ export default {
     ipcRenderer.on('ok', (e, arg) => {
       if (arg === 0) {
         this.ishow = false
+        this.form.isChange = true
       }
     })
     ipcRenderer.on('close', (e, arg) => {

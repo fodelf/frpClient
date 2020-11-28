@@ -60,7 +60,7 @@ ipcMain.on('connect', (event, arg) => {
     } else {
       console.log('写入成功了')
       event.sender.send('mes', '写入成功了')
-      runExec(event)
+      runExec(event,arg)
     }
   })
 })
@@ -140,7 +140,7 @@ function close () {
     // }
   }
 }
-async function runExec (event) {
+async function runExec (event,arg) {
   close()
   count = 0
   // const str = app.getAppPath()
@@ -167,13 +167,22 @@ async function runExec (event) {
   const type = os.type()
   const appPath = path.resolve(__dirname, '..')
   var filePath = ''
+  // ./frpc reload -c ./frpc.ini 
   switch (type) {
     case 'Darwin':
     case 'Linux':
       filePath = path.join(appPath, 'frp', 'frp_mac')
-      workerProcess = exec(`cd  ${filePath}
-    ./frpc -c reload  ./frpc.ini
-    `, {})
+      if(arg.isChange){
+        workerProcess = exec(`cd  ${filePath}
+        chmod 755 *
+        ./frpc reload -c ./frpc.ini 
+        `, {})
+      }else{
+        workerProcess = exec(`cd  ${filePath}
+        chmod 755 *
+        ./frpc -c ./frpc.ini 
+        `, {})
+      }
       break
     case 'Windows_NT':
       // shellAction(`cd  ${filePath}`)
